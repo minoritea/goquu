@@ -16,23 +16,20 @@ func (server *Server) worker(ch chan bool) {
 		<-ch
 	inner:
 		for {
+
 			job, err := server.jobQueue.PopJob()
 			if err != nil {
 				break inner
 			}
-			output, errstr, err := job.Execute()
-			status := 0
-			if err != nil {
-				logger.Println(err)
-				status = 1 // TODO: get real status code from Process
+			for job != nil {
+				result, err := job.Execute()
+				server.resultQueue.PushResult(result)
+				if err != nil && job.ErrorCallBack != nil {
+					job = job.ErrorCallBack
+				} else {
+					job = nil
+				}
 			}
-
-			server.resultQueue.PushResult(&JobResult{
-				Status: status,
-				Stdout: output,
-				Stderr: errstr,
-				Job:    job,
-			})
 		}
 	}
 }

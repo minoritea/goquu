@@ -5,14 +5,6 @@ import (
 	"encoding/json"
 )
 
-type JobResult struct {
-	Status int    `json:"status"`
-	Stderr string `json:"stderr"`
-	Stdout string `json:"stdout"`
-
-	Job *Job `json:"job"`
-}
-
 type ResultQueue struct {
 	*queue.Queue
 }
