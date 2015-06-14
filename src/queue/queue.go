@@ -84,7 +84,7 @@ func (q *Queue) List() (list [][]byte) {
 	for iter.Next() {
 		value := iter.Value()
 		bytes := make([]byte, len(value))
-		copy(bytes, value)
+		copy(bytes, value) // Because Iterator.Value() reuses a same buffer and return it.
 		list = append(list, bytes)
 	}
 	return
