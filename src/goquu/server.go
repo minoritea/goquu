@@ -3,12 +3,14 @@ package goquu
 import (
 	"encoding/json"
 	"net/http"
+	"errors"
 )
 
 type Server struct {
 	jobQueue    *JobQueue
 	resultQueue *ResultQueue
 	channels    []chan bool
+	config *Config
 }
 
 func (server *Server) worker(ch chan bool) {
@@ -35,15 +37,32 @@ func (server *Server) worker(ch chan bool) {
 }
 
 func NewServer() (server *Server, err error) {
-	jq, err := NewJobQueue("./queue.db")
+	config, err := loadConfig()
 	if err != nil {
 		return
 	}
-	rq, err := NewResultQueue("./queue.db")
+
+	err = SetLoggerFromFile(config.LogFile, config.LogFlag)
 	if err != nil {
 		return
 	}
-	return &Server{jobQueue: jq, resultQueue: rq, channels: make([]chan bool, 0)}, err
+
+	jq, err := NewJobQueue(config.DBDirectory)
+	if err != nil {
+		return
+	}
+
+	rq, err := NewResultQueue(config.DBDirectory)
+	if err != nil {
+		return
+	}
+
+	if config.WorkerSize < 1 {
+		err = errors.New("Worker size must be greater than zero!")
+		return
+	}
+
+	return &Server{jobQueue: jq, resultQueue: rq, channels: make([]chan bool, config.WorkerSize), config: config}, err
 }
 
 func (server *Server) ResultsAPIHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,8 +119,10 @@ func (server *Server) JobsAPIHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) Run() (err error) {
-	server.channels = append(server.channels, make(chan bool))
-	go server.worker(server.channels[0])
+	for i:=0; i< server.config.WorkerSize; i++ {
+		server.channels[i] = make(chan bool)
+		go server.worker(server.channels[i])
+	}
 	for _, ch := range server.channels {
 		ch <- true
 	}
