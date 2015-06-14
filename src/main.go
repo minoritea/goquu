@@ -20,13 +20,18 @@ func trap() {
 	)
 	go func() {
 		<-sig
-		fmt.Println("server is shutting down...")
+		fmt.Println("The server is shutting down...")
 		queue.CloseAll()
 		os.Exit(0)
 	}()
 }
 func main() {
+        defer queue.CloseAll()
 	trap()
-	server, _ := goquu.NewServer()
+	server, err := goquu.NewServer()
+	if err != nil {
+		fmt.Println("Failed to start a server!")
+		return
+	}
 	server.Run()
 }

@@ -8,14 +8,17 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"math"
 )
 
 type Job struct {
-	Tags []string `json:"tags"`
-
 	Command string   `json:"command"`
 	Args    []string `json:"args"`
 	Input   string   `json:"input"`
+	Timeout int	`json:"timeout"`
+
+	Tags []string `json:"tags"`
+
 	ErrorCallBack *Job `json:"errback"`
 }
 
@@ -32,14 +35,7 @@ func (j *Job) Validate() (err error) {
 	if len(j.Command) < 1 {
 		return errors.New("Command must be given!")
 	}
-	if len(j.Tags) < 1 {
-		return errors.New("Tags must contain at least one element")
-	}
-	for _, tag := range j.Tags {
-		if len(tag) < 1 {
-			return errors.New("Each tag should not be empty!")
-		}
-	}
+
 	return
 }
 
@@ -95,8 +91,15 @@ func (job *Job) executeCommand() (output string, errstr string, err error) {
 		ch <- cmd.Wait()
 	}()
 
+	var duration time.Duration
+	if job.Timeout > 0 {
+		duration = time.Duration(job.Timeout) * time.Second
+	} else {
+		duration = math.MaxInt64
+	}
+
 	select {
-	case <-time.After(1000 * time.Millisecond):
+	case <-time.After(duration):
 		if err = cmd.Process.Kill(); err != nil {
 		} else {
 			err = errors.New(fmt.Sprintf("Process:\"%s\" is killed", strings.Join(cmd.Args, " ")))

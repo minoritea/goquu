@@ -102,6 +102,9 @@ func (server *Server) JobsAPIHandler(w http.ResponseWriter, r *http.Request) {
 func (server *Server) Run() (err error) {
 	server.channels = append(server.channels, make(chan bool))
 	go server.worker(server.channels[0])
+	for _, ch := range server.channels {
+		ch <- true
+	}
 	http.HandleFunc("/jobs", server.JobsAPIHandler)
 	http.HandleFunc("/results", server.ResultsAPIHandler)
 	if err = http.ListenAndServe(":8080", nil); err != nil {
