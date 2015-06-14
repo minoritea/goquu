@@ -1,9 +1,8 @@
-package job
+package goquu
 
 import (
 	"encoding/json"
 	"../queue"
-	"fmt"
 )
 
 type JobQueue struct {
@@ -27,15 +26,15 @@ func (jobQueue *JobQueue) PopJob() (j *Job, err error) {
 	}
 	var result Job
 	err = json.Unmarshal(jsonStr, &result)
-	j = &result
 	if err != nil {
 		return
 	}
+	j = &result
 	return
 }
 
 func (jobQueue *JobQueue) PushJob(j *Job)(err error) {
-	str, err := json.Marshal(*j)
+	str, err := json.Marshal(j)
 	if err != nil {
 		return
 	}
@@ -43,17 +42,14 @@ func (jobQueue *JobQueue) PushJob(j *Job)(err error) {
 }
 
 func (jobQueue *JobQueue) ListJobs()(jobs []Job) {
+	jobs = make([]Job, 0)
 	for _, bytes := range jobQueue.List() {
 		var j Job
 		if err := json.Unmarshal(bytes, &j); err != nil {
-			fmt.Println(err)
+			logger.Println(err)
 		} else {
 			jobs = append(jobs, j)
 		}
-	}
-
-	if len(jobs) == 0 {
-		jobs = make([]Job, 0)
 	}
 
 	return

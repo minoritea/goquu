@@ -1,7 +1,6 @@
-package job
+package goquu
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os/exec"
@@ -63,17 +62,17 @@ func (j *Job) Execute() (output string, errstr string, err error) {
 	stdin.Close()
 
 	tmp, err := ioutil.ReadAll(stdout)
-	output = string(tmp)
 	if err != nil {
-		fmt.Println(err)
+		logger.Println(err)
 	}
+	output = string(tmp)
 
 	tmp = []byte{}
 	tmp, err = ioutil.ReadAll(stderr)
-	errstr = string(tmp)
 	if err != nil {
-		fmt.Println(err)
+		logger.Println(err)
 	}
+	errstr = string(tmp)
 
 	err = nil
 

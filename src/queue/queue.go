@@ -6,11 +6,14 @@ import (
 	"time"
 	"math/rand"
 	"strconv"
+	"sync"
 )
+
 type Queue struct {
 	backend *leveldb.DB
 	random *rand.Rand
 	Prefix []byte
+	mutex *sync.Mutex
 }
 
 var (
@@ -28,7 +31,7 @@ func New(path string, prefix string) (q *Queue, err error) {
 		DBCache[path] = backend
 	}
 	random := rand.New(rand.NewSource(time.Now().Unix()))
-	q = &Queue{backend: backend, random: random, Prefix: []byte(prefix)}
+	q = &Queue{backend: backend, random: random, Prefix: []byte(prefix), mutex: new(sync.Mutex)}
 	return
 }
 
@@ -39,6 +42,8 @@ func CloseAll() {
 }
 
 func (q *Queue) Push(val []byte) (err error) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
 	key := q.generateKey()
 	return q.backend.Put(key, val, nil)
 }
@@ -52,8 +57,11 @@ func (q *Queue) generateKey() (key []byte) {
 }
 
 func (q *Queue) Pop() (val []byte, err error) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
 	backend := q.backend
 	iter := backend.NewIterator(util.BytesPrefix(q.Prefix), nil)
+	defer iter.Release()
 	if iter.Next() {
 		val := iter.Value()
 		err = backend.Delete(iter.Key(), nil)
@@ -67,9 +75,16 @@ func (q *Queue) Pop() (val []byte, err error) {
 }
 
 func (q *Queue) List()(list [][]byte) {
+	list = make([][]byte, 0)
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
 	iter := q.backend.NewIterator(util.BytesPrefix(q.Prefix), nil)
+	defer iter.Release()
 	for iter.Next() {
-		list = append(list, iter.Value())
+		value := iter.Value()
+		bytes := make([]byte, len(value))
+		copy(bytes, value)
+		list = append(list, bytes)
 	}
 	return
 }
