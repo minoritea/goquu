@@ -50,7 +50,7 @@ func (q *Queue) Push(val []byte) (err error) {
 }
 
 func (q *Queue) generateKey() (key []byte) {
-	key = q.Prefix
+	key = append(key, q.Prefix...)
 	nano := time.Now().UnixNano()
 	key = strconv.AppendInt(key, nano, 16)
 	key = strconv.AppendInt(key, q.random.Int63(), 16)
