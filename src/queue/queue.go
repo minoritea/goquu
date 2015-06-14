@@ -1,24 +1,25 @@
-package queue 
+package queue
+
 import (
 	"errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"time"
 	"math/rand"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Queue struct {
 	backend *leveldb.DB
-	random *rand.Rand
-	Prefix []byte
-	mutex *sync.Mutex
+	random  *rand.Rand
+	Prefix  []byte
+	mutex   *sync.Mutex
 }
 
 var (
-	DBCache map[string]*leveldb.DB = make(map[string]*leveldb.DB)
-        ValueNotFound error = errors.New("No values are found.")
+	DBCache       map[string]*leveldb.DB = make(map[string]*leveldb.DB)
+	ValueNotFound error                  = errors.New("No values are found.")
 )
 
 func New(path string, prefix string) (q *Queue, err error) {
@@ -74,7 +75,7 @@ func (q *Queue) Pop() (val []byte, err error) {
 	return val, ValueNotFound
 }
 
-func (q *Queue) List()(list [][]byte) {
+func (q *Queue) List() (list [][]byte) {
 	list = make([][]byte, 0)
 	q.mutex.Lock()
 	defer q.mutex.Unlock()

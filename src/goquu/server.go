@@ -1,19 +1,20 @@
 package goquu
+
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 )
 
 type Server struct {
-	jobQueue *JobQueue
+	jobQueue    *JobQueue
 	resultQueue *ResultQueue
-	channels []chan bool
+	channels    []chan bool
 }
 
 func (server *Server) worker(ch chan bool) {
 	for {
-		<- ch
-		inner:
+		<-ch
+	inner:
 		for {
 			job, err := server.jobQueue.PopJob()
 			if err != nil {
@@ -30,7 +31,7 @@ func (server *Server) worker(ch chan bool) {
 				Status: status,
 				Stdout: output,
 				Stderr: errstr,
-				Job: job,
+				Job:    job,
 			})
 		}
 	}
@@ -48,7 +49,7 @@ func NewServer() (server *Server, err error) {
 	return &Server{jobQueue: jq, resultQueue: rq, channels: make([]chan bool, 0)}, err
 }
 
-func (server *Server) ResultsAPIHandler(w http.ResponseWriter, r *http.Request){
+func (server *Server) ResultsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	results := server.resultQueue.ListResults()
 	str, err := json.Marshal(results)
 	if err != nil {

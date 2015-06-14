@@ -1,8 +1,8 @@
 package goquu
 
 import (
-	"encoding/json"
 	"../queue"
+	"encoding/json"
 )
 
 type JobResult struct {
@@ -26,7 +26,7 @@ func NewResultQueue(path string) (resultQueue *ResultQueue, err error) {
 	return
 }
 
-func (resultQueue *ResultQueue) PushResult(result *JobResult)(err error) {
+func (resultQueue *ResultQueue) PushResult(result *JobResult) (err error) {
 	str, err := json.Marshal(result)
 	if err != nil {
 		return
@@ -34,7 +34,7 @@ func (resultQueue *ResultQueue) PushResult(result *JobResult)(err error) {
 	return resultQueue.Push(str)
 }
 
-func (resultQueue *ResultQueue) ListResults()(results []JobResult) {
+func (resultQueue *ResultQueue) ListResults() (results []JobResult) {
 	results = make([]JobResult, 0)
 	for _, bytes := range resultQueue.List() {
 		var result JobResult

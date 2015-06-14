@@ -3,11 +3,12 @@ package main
 import (
 	"./goquu"
 	"./queue"
-	"os/signal"
-	"os"
-	"syscall"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 )
+
 func trap() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(
@@ -18,7 +19,7 @@ func trap() {
 		syscall.SIGQUIT,
 	)
 	go func() {
-		<- sig
+		<-sig
 		fmt.Println("server is shutting down...")
 		queue.CloseAll()
 		os.Exit(0)

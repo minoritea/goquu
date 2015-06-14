@@ -1,10 +1,10 @@
 package goquu
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"os/exec"
-	"errors"
 )
 
 type Job struct {
